@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block title %}Create Blog{% endblock %}
+{% block style %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .container {
+        max-width: 600px;
+        margin: auto;
+        padding: 30px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+{% block body %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Create a New Blog Post</h2>
+    <form action="{% url 'myApp:create_blog' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+            <p id="message" style="color: red;"></p>
+        </div>
+        <div class="mb-3">
+            <label for="image" class="form-label">Image</label>
+            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+        </div>
+        <div class="mb-3">
+            <label for="category" class="form-label">Category</label>
+            <select class="form-select" id="category" name="category" required>
+                <option value="" selected disabled>Select a category</option>
+                <option value="mental_health">Mental Health</option>
+                <option value="nutrition">Nutrition</option>
+                <option value="healthy_diet">Healthy Diet</option>
+                <option value="obesity">Obesity</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="summary" class="form-label">Summary</label>
+            <textarea class="form-control" id="summary" name="summary" rows="3" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="content" class="form-label">Content</label>
+            <textarea class="form-control" id="content" name="content" rows="8" required></textarea>
+        </div>
+        <div class="d-grid gap-2">
+            <!-- Hidden input field for 'save_as_draft' -->
+            <input type="hidden" name="save_as_draft" id="save-as-draft-input" value="false">
+
+            <button type="submit" class="btn btn-primary" id="submit-button">Submit</button>
+            <button type="submit" name="save_as_draft_button" class="btn btn-secondary" id="draft-button">Save as
+                Draft</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    const inputField = document.getElementById('title');
+    const messageElement = document.getElementById('message');
+    const characterLimit = 100;
+
+    inputField.addEventListener('input', function () {
+        if (inputField.value.length >= characterLimit) {
+            inputField.value = inputField.value.substring(0, characterLimit);
+            messageElement.textContent = 'Character limit reached.';
+        } else {
+            messageElement.textContent = '';
+        }
+    });
+
+    document.getElementById('submit-button').addEventListener('click', function () {
+        document.getElementById('save-as-draft-input').value = false;
+    });
+
+    document.getElementById('draft-button').addEventListener('click', function () {
+        document.getElementById('save-as-draft-input').value = true;
+    });
+</script>
+{% endblock %}

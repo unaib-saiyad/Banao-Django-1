@@ -1,55 +1,199 @@
-<!DOCTYPE html>
-<html lang="en">
-  {% load static %}
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Details</title>
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-</head>
-<body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">Navbar</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-  
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav mr-auto">
-      </ul>
-      <div class="form-inline my-2 my-lg-0">
-        {% if user.is_authenticated %}
-        <a href="{% url 'myApp:logout' %}" class="btn btn-danger">logout</a>
-        {% else %}
-        <a href="{% url 'myApp:login' %}" class="btn btn-primary">Login</a>
-        {% endif %}
-      </div>
-    </div>
-  </nav>
-  <div class="container mt-5">
-    <div class="row">
-      <div class="col-md-4 offset-md-4">
-        <div class="text-center">
-          <img {% if user.is_authenticated %} src="{{info.profile.url}}" {% else %} src="../media/avatar.png" {% endif %} alt="Profile Picture" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px;">
-          <h4>{% if user.is_authenticated %} {{user.username}}{% endif %}</h4>
-          <p class="text-muted">Email: {% if user.is_authenticated %} {{user.email}}{% endif %}</p>
-        </div>
-        <hr>
-        <div>
-          <h5>Profile Details</h5>
-          <p><strong>First Name:</strong> {% if user.is_authenticated %} {{user.first_name}}{% endif %}</p>
-          <p><strong>Last Name:</strong> {% if user.is_authenticated %} {{user.last_name}}{% endif %}</p>
-          <p><strong>Address:</strong> {% if user.is_authenticated %} {{info.address}}{% endif %}</p>
-          <p><strong>Role:</strong> {% if user.is_authenticated %} {{info.type}}{% endif %}</p>
-        </div>
-      </div>
-    </div>
-  </div>
+{% extends "layout.html" %}
+{% load static %}
+{% block title %}Dashboard{% endblock %}
 
-  <!-- Bootstrap JS and jQuery (Optional) -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+{% block style %}
+<style>
+  .blog-card {
+    border: none;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+    height: 400px;
+    /* Set a fixed height for the cards */
+  }
+
+  .blog-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .blog-image {
+    object-fit: cover;
+    height: 200px;
+  }
+
+  .blog-title {
+    font-size: 1.2rem;
+    margin-top: 10px;
+  }
+
+  .blog-summary {
+    color: #777;
+    margin-top: 10px;
+  }
+
+  .load-more-button {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+
+  .load-more-button:hover {
+    background-color: #2980b9;
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 5px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #3498db;
+    border-radius: 50%;
+    margin: 0 auto;
+    animation: spin 1s infinite linear;
+    display: none;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+
+{% endblock %}
+
+{% block body %}
+<div class="container d-flex justify-content-around my-4" style="font-size: 1rem;">
+  {% if info.type == 'Doctor' %}
+  <button type="button" id="my_posts" onclick="toggleMyPost(); changeCategory('all');"
+    class="btn btn-sm btn-outline-primary">My Posts</button>
+  {% endif %}
+  <button type="button" id="all" onclick="changeCategory('all')" class="btn btn-sm btn-outline-dark">All Posts</button>
+  <button type="button" id="mental_health" onclick="changeCategory('mental_health')"
+    class="btn btn-sm btn-outline-info">Mental
+    Health</button>
+  <button type="button" id="nutrition" onclick="changeCategory('nutrition')"
+    class="btn btn-sm btn-outline-secondary">Nutrition</button>
+  <button type="button" id="healthy_diet" onclick="changeCategory('healthy_diet')"
+    class="btn btn-sm btn-outline-success">Healthy
+    Diet</button>
+  <button type="button" id="obesity" onclick="changeCategory('obesity')"
+    class="btn btn-sm btn-outline-danger">Obesity</button>
+</div>
+<div class="container my-2">
+  <h2 class="mb-4 text-center"><span id="filter1">Posts</span> - <span id="filter"></span> </h2>
+  <div id="blog-container" class="d-flex flex-wrap">
+    <!-- Display initial blog posts here -->
+  </div>
+</div>
+<di class="d-flex justify-content-center my-3">
+  <button id="load-more-button" class="load-more-button">Load More</button>
+</di>
+<div id="loading-spinner" class="loading-spinner my-3"></div>
+<div id="bottom-reached" class="text-danger text-center my-3">We have reached the bottom</div>
+
+{% endblock %}
+
+
+{% block script %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  let currentPage = 1;
+  let category = "all";
+  draft = false;
+  function toggleMyPost() {
+    const allButton = document.getElementById('my_posts');
+    allButton.classList.toggle('btn-outline-primary');
+    allButton.classList.toggle('btn-primary');
+    if(draft){
+      draft=false;
+      $("#filter1").html("Post");
+    }
+    else{
+      $("#filter1").html("My Post");
+      draft=true;
+    }
+  }
+  function loadMoreBlogs() {
+    $('#load-more-button').hide();
+    $('#loading-spinner').show();
+
+    $.ajax({
+      url: `/blog_list/?page=${currentPage}&category=${category}&draft=${draft}`,
+      method: 'GET',
+      dataType: 'json',
+      success: function (response) {
+        if (response) {
+          currentPage++;
+          response.data.forEach(function (blog) {
+            const words = blog.summary.split(' ');
+            let draft = "";
+            if (words.length > 15) {
+              const truncatedSummary = words.slice(0, 15).join(' ');
+              blog.summary = truncatedSummary + '...';
+            }
+            if(blog.draft){
+              draft = "This is drafted...";
+            }
+            $('#blog-container').append(`
+    <div class="col-md-4">
+      <div class="card blog-card" style="height:450px;">
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning">
+         Source: ${blog.user}
+        </span>
+        <img src="${blog.image}" alt="No image" class="card-img-top blog-image">
+        <div class="card-body">
+          <h3 class="card-title blog-title">${blog.title.slice(0, 30)}</h3>
+          <p class="card-text blog-summary"> ${blog.summary}</p>
+          <small class="card-text text-danger"> ${draft}</small>
+          <a href="#" class="btn btn-primary btn-sm">Read More</a>
+        </div>
+      </div>
+    </div>
+
+                        `);
+          });
+        } if (response.has_next) {
+          setTimeout(function () {
+            $('#loading-spinner').hide();
+            $('#load-more-button').show();
+          }, 2000); // 2000 milliseconds (2 seconds)
+        }
+        else {
+          $('#load-more-button').hide();
+          $('#loading-spinner').hide();
+          $('#bottom-reached').show();
+        }
+      }
+    });
+  }
+
+  function changeCategory(cat) {
+    $("#filter").html(cat);
+    $('#blog-container').html("");
+    $('#load-more-button').hide();
+    $('#loading-spinner').show();
+    $('#bottom-reached').hide();
+    category = cat;
+    currentPage = 1;
+
+    loadMoreBlogs();
+  }
+
+  $('#load-more-button').on('click', loadMoreBlogs);
+
+  $(document).ready(function () {
+    $('#bottom-reached').hide();
+    $("#filter").html("all");
+    loadMoreBlogs();
+  });
+</script>
+{% endblock %}

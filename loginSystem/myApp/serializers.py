@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserInformation
+from .models import UserInformation, Blog
 from django.contrib.auth.models import User
 
 
@@ -19,3 +19,12 @@ class UserInfoValidation(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return UserInformation.objects.create(**validated_data)
+
+
+class BlogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Blog
+        exclude = ['user', 'id', 'draft']
+
+    def create(self, validated_data):
+        return Blog.objects.create(**validated_data)

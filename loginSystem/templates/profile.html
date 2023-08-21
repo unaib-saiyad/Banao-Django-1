@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block title %}Profile Details{% endblock %}
+{% block body %}
+    <div class="row mt-5">
+      <div class="col-md-4 offset-md-4">
+        <div class="text-center">
+          <img {% if user.is_authenticated %} src="{{info.profile.url}}" {% else %} src="../media/avatar.png" {% endif %} alt="Profile Picture" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px;">
+          <h4>{% if user.is_authenticated %} {{user.username}}{% endif %}</h4>
+          <p class="text-muted">Email: {% if user.is_authenticated %} {{user.email}}{% endif %}</p>
+        </div>
+        <hr>
+        <div>
+          <h5>Profile Details</h5>
+          <p><strong>First Name:</strong> {% if user.is_authenticated %} {{user.first_name}}{% endif %}</p>
+          <p><strong>Last Name:</strong> {% if user.is_authenticated %} {{user.last_name}}{% endif %}</p>
+          <p><strong>Address:</strong> {% if user.is_authenticated %} {{info.address}}{% endif %}</p>
+          <p><strong>Role:</strong> {% if user.is_authenticated %} {{info.type}}{% endif %}</p>
+        </div>
+      </div>
+    </div>
+{% endblock %}
+
